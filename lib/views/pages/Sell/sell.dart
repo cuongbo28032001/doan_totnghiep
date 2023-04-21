@@ -1,6 +1,11 @@
+import 'dart:convert';
+
+import 'package:fltn_app/api.dart';
 import 'package:fltn_app/views/pages/infomation_drugs.dart';
+import 'package:fltn_app/views/pages/sell/create_bill.dart';
 import 'package:flutter/material.dart';
 import '../../../common/widgets/divider.dart';
+import '../../../common/widgets/loading.dart';
 import '../../../common/widgets/search.dart';
 import '../../../consts/colorsTheme.dart';
 import 'dart:developer' as dev;
@@ -15,6 +20,57 @@ class SellScreen extends StatefulWidget {
 }
 
 class _SellScreenState extends State<SellScreen> {
+  Future<void> processing() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
+  }
+
+  bool loading = false;
+  List<dynamic> listProduct = [];
+  callApiProduct() async {
+    // var idTopicHome = Provider.of<HomeModel>(context, listen: false);
+    // if (idTopicHome.check == true) {
+    //   idTopic = idTopicHome.valueid;
+    var search = {
+      "pageNumber": 1,
+      "pageSize": 5,
+      "customize": {
+        // "tenThuoc":"Thuốc dạ dày chữ Y"
+      }
+    };
+    try {
+      var response = await httpPost('/api/thuoc/search', search, context);
+
+      if (response.containsKey("body")) {
+        var body = response["body"]["result"]["content"];
+        setState(() {
+          listProduct = body.map((e) {
+            return ProductModel.fromJson(e);
+          }).toList();
+          if (listProduct.isNotEmpty) {
+            loading = true;
+          }
+        });
+      }
+    } catch (e) {
+      return listProduct;
+    }
+
+    return listProduct;
+  }
+
+  @override
+  void initState() {
+    callApiProduct();
+
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,7 +92,7 @@ class _SellScreenState extends State<SellScreen> {
         const SizedBox(
           height: 10,
         ),
-        renderContentSell(context),
+        (loading == true) ? renderContentSell(context) : loadingCallAPi(),
       ],
     );
   }
@@ -48,70 +104,16 @@ class _SellScreenState extends State<SellScreen> {
           context: context,
           lable: 'Nhập tên, mã, serial/IMEI, lô, hsd',
           addIcon: Icons.add,
+          addItem: const CreateBillSellScreen(),
           filterIcon: Icons.filter_alt_rounded,
         ));
   }
-
-  // renderSelectMenu(context) {
-  //   return Container(
-  //       padding: const EdgeInsets.all(10),
-  //       height: 50,
-  //       decoration: BoxDecoration(
-  //           color: Colors.white,
-  //           border: Border(
-  //               bottom:
-  //                   BorderSide(width: 0.1, color: logoGreen.withOpacity(0.5)))),
-  //       child: Row(
-  //         children: [
-  //           selectIconAndText(
-  //               context, Icons.menu, "Tất cả", Colors.black45, 25.0, null),
-  //           const Expanded(
-  //             child: SizedBox(),
-  //           ),
-  //           selectIconAndText(
-  //               context, Icons.check, "Chọn nhiều", Colors.black45, 20.0, null)
-  //         ],
-  //       ));
-  // }
-
-  // selectIconAndText(context, icons, titles, colors, sizes, widGet) {
-  //   return InkWell(
-  //     onTap: () {
-  //       showModalBottomSheet(
-  //         context: context,
-  //         isScrollControlled: true,
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(16.0),
-  //         ),
-  //         builder: (BuildContext context) {
-  //           return FractionallySizedBox(
-  //             heightFactor: 0.8,
-  //             child: widGet,
-  //           );
-  //         },
-  //       );
-  //     },
-  //     child: Row(children: [
-  //       Icon(
-  //         icons,
-  //         color: colors,
-  //         size: sizes,
-  //       ),
-  //       const SizedBox(
-  //         width: 10,
-  //       ),
-  //       Text(titles, style: TextStyle(color: colors))
-  //     ]),
-  //   );
-  // }
 
   renderContentSell(context) {
     return Expanded(
       child: SingleChildScrollView(
         child: Column(
-          children: [
-            for (ProductModel item in items) renderProduct(context, item)
-          ],
+          children: [for (ProductModel item in listProduct) renderProduct(context, item)],
         ),
       ),
     );
@@ -137,9 +139,14 @@ class _SellScreenState extends State<SellScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(children: [
-              Image(
-                image: AssetImage(productModel.url),
+              Image.asset('assets/images/LogoApp.png', height: 50, filterQuality: FilterQuality.high),
+              // Image(
+              //   image: AssetImage(productModel.url),
+              //   height: 50,
+              // ),
+              Container(
                 height: 50,
+                color: Colors.red,
               ),
               const SizedBox(width: 20),
               Expanded(
@@ -151,15 +158,10 @@ class _SellScreenState extends State<SellScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(productModel.nameProduct,
-                              style: const TextStyle(fontSize: 15)),
+                          Text(productModel.tenThuoc ?? '', style: const TextStyle(fontSize: 15)),
                           Text(
-                            productModel.codeProduct,
+                            productModel.maThuoc ?? '',
                             style: TextStyle(color: logoGreen, fontSize: 15),
-                          ),
-                          Text(
-                            "SL kho: ${productModel.quantityInStock}",
-                            style: const TextStyle(fontSize: 15),
                           ),
                         ],
                       ),
@@ -171,19 +173,16 @@ class _SellScreenState extends State<SellScreen> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            productModel.priceProduct.toString(),
+                            "Chưa làm",
                             style: TextStyle(color: logoGreen, fontSize: 15),
                           ),
                           Text(
-                            productModel.weightProduct,
-                            style: const TextStyle(
-                                color: Colors.black54, fontSize: 14),
+                            "Hàm lượng",
+                            style: const TextStyle(color: Colors.black54, fontSize: 14),
                           ),
-                          const Text(
-                            "HSD: 11/12/2024",
-                            style: TextStyle(
-                                fontSize: 12, fontStyle: FontStyle.italic),
-                            textAlign: TextAlign.end,
+                          Text(
+                            "SL kho: ${listProduct.length}",
+                            style: const TextStyle(fontSize: 15),
                           ),
                         ],
                       ),

@@ -1,5 +1,6 @@
 import 'package:fltn_app/common/widgets/check_box.dart';
 import 'package:fltn_app/common/widgets/showToast.dart';
+import 'package:fltn_app/views/pages/sell/show_bill_confirm.dart';
 import 'package:flutter/material.dart';
 
 import '../../../common/widgets/divider.dart';
@@ -23,11 +24,11 @@ class _CreateBillSellScreenState extends State<CreateBillSellScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    for (ProductModel item in items) {
-      if (item.quantityInStock > 0) {
-        productListSell.add(item);
-      }
-    }
+    // for (ProductModel item in items) {
+    //   if (item.quantityInStock > 0) {
+    //     productListSell.add(item);
+    //   }
+    // }
   }
 
   int calculateTotalPrice() {
@@ -36,7 +37,7 @@ class _CreateBillSellScreenState extends State<CreateBillSellScreen> {
     productSelect.forEach((product, quantity) {
       if (quantity > 0) {
         // Tính tổng số tiền của sản phẩm hiện tại
-        int productPrice = product.priceProduct;
+        int productPrice = 20;
         int productTotalPrice = productPrice * quantity;
         // Cộng vào tổng số tiền
         totalPrice += productTotalPrice;
@@ -80,10 +81,11 @@ class _CreateBillSellScreenState extends State<CreateBillSellScreen> {
               Text("Đã chọn (${productSelect.length}) sản phẩm"),
               InkWell(
                   onTap: () {
+                    print(productSelect);
                     productSelect.forEach((product, count) {
                       if (count > 0) {
-                        print(
-                            'Sản phẩm: ${product.nameProduct}, Số lượng: $count');
+                        // print(
+                        //     'Sản phẩm: ${product.nameProduct}, Số lượng: $count');
                       }
                     });
                   },
@@ -94,7 +96,7 @@ class _CreateBillSellScreenState extends State<CreateBillSellScreen> {
         const SizedBox(
           height: 10,
         ),
-        renderContentSell(context),
+        // renderContentSell(context),
       ],
     );
   }
@@ -115,6 +117,14 @@ class _CreateBillSellScreenState extends State<CreateBillSellScreen> {
             InkWell(
               onTap: (sumMoeny > 0)
                   ? () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ShowBillConfirmScreen(
+                            productSelect: productSelect,
+                          ),
+                        ),
+                      );
                       toast("Tạo đơn");
                     }
                   : null,
@@ -125,10 +135,7 @@ class _CreateBillSellScreenState extends State<CreateBillSellScreen> {
                 child: const Center(
                   child: Text(
                     "Tạo đơn",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600),
+                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -137,72 +144,72 @@ class _CreateBillSellScreenState extends State<CreateBillSellScreen> {
         ));
   }
 
-  renderContentSell(context) {
-    return Expanded(
-      child: ListView(
-        children: [
-          for (ProductModel item in productListSell)
-            if (item.quantityInStock > 0)
-              Container(
-                padding: const EdgeInsets.only(left: 16.0),
-                color: Colors.white,
-                child: Column(
-                  children: [
-                    CheckBoxWidget(
-                      value: productSelect.keys.contains(item) &&
-                          productSelect[item]! > 0,
-                      content: renderProduct(context, item),
-                      handleSelected: (bool? value) {
-                        setState(() {
-                          if (value!) {
-                            // Nếu sản phẩm đã được chọn, thì kiểm tra nếu đã tồn tại trong selectedProducts thì tăng số lượng lên 1, ngược lại thêm sản phẩm vào selectedProducts với số lượng là 1
-                            if (productSelect.containsKey(item)) {
-                              productSelect[item] = productSelect[item]! + 1;
-                            } else {
-                              productSelect[item] = 1;
-                            }
-                          } else {
-                            // Nếu sản phẩm đã bị bỏ chọn, thì giảm số lượng của sản phẩm trong productSelect xuống 1. Nếu số lượng là 0 thì xóa sản phẩm khỏi productSelect
-                            if (productSelect.containsKey(item) &&
-                                productSelect[item]! > 0) {
-                              productSelect[item] = 0;
-                              if (productSelect[item]! == 0) {
-                                productSelect.remove(item);
-                              }
-                            }
-                          }
-                        });
-                      },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 15.0),
-                      child: renderOrderNumberProduct(item),
-                    ),
-                    (productListSell.indexOf(item) !=
-                            productListSell.length - 1)
-                        ? divider(context: context)
-                        : Container(
-                            width: double.infinity,
-                            height: 10.0,
-                            color: Colors.white,
-                          ),
-                  ],
-                ),
-              ),
-        ],
-      ),
-    );
-  }
+  // renderContentSell(context) {
+  //   return Expanded(
+  //     child: ListView(
+  //       children: [
+  //         for (ProductModel item in productListSell)
+  //           if (item.quantityInStock > 0)
+  //             Container(
+  //               padding: const EdgeInsets.only(left: 16.0),
+  //               color: Colors.white,
+  //               child: Column(
+  //                 children: [
+  //                   CheckBoxWidget(
+  //                     value: productSelect.keys.contains(item) &&
+  //                         productSelect[item]! > 0,
+  //                     content: renderProduct(context, item),
+  //                     handleSelected: (bool? value) {
+  //                       setState(() {
+  //                         if (value!) {
+  //                           // Nếu sản phẩm đã được chọn, thì kiểm tra nếu đã tồn tại trong selectedProducts thì tăng số lượng lên 1, ngược lại thêm sản phẩm vào selectedProducts với số lượng là 1
+  //                           if (productSelect.containsKey(item)) {
+  //                             productSelect[item] = productSelect[item]! + 1;
+  //                           } else {
+  //                             productSelect[item] = 1;
+  //                           }
+  //                         } else {
+  //                           // Nếu sản phẩm đã bị bỏ chọn, thì giảm số lượng của sản phẩm trong productSelect xuống 1. Nếu số lượng là 0 thì xóa sản phẩm khỏi productSelect
+  //                           if (productSelect.containsKey(item) &&
+  //                               productSelect[item]! > 0) {
+  //                             productSelect[item] = 0;
+  //                             if (productSelect[item]! == 0) {
+  //                               productSelect.remove(item);
+  //                             }
+  //                           }
+  //                         }
+  //                       });
+  //                     },
+  //                   ),
+  //                   Padding(
+  //                     padding: const EdgeInsets.only(right: 15.0),
+  //                     child: renderOrderNumberProduct(item),
+  //                   ),
+  //                   (productListSell.indexOf(item) !=
+  //                           productListSell.length - 1)
+  //                       ? divider(context: context)
+  //                       : Container(
+  //                           width: double.infinity,
+  //                           height: 10.0,
+  //                           color: Colors.white,
+  //                         ),
+  //                 ],
+  //               ),
+  //             ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   renderProduct(context, ProductModel productModel) {
     return Container(
       padding: const EdgeInsets.only(top: 5, left: 5, right: 15, bottom: 0),
       color: Colors.white,
       child: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-        Image(
-          image: AssetImage(productModel.url),
-          height: 50,
-        ),
+        // Image(
+        //   image: AssetImage(productModel.url),
+        //   height: 50,
+        // ),
         const SizedBox(width: 20),
         Expanded(
           child: SizedBox(
@@ -213,10 +220,9 @@ class _CreateBillSellScreenState extends State<CreateBillSellScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(productModel.nameProduct,
-                        style: const TextStyle(fontSize: 15)),
+                    Text("productModel.nameProduct", style: const TextStyle(fontSize: 15)),
                     Text(
-                      "SL kho: ${productModel.quantityInStock}",
+                      "SL kho:200",
                       style: const TextStyle(fontSize: 15),
                     ),
                   ],
@@ -229,13 +235,12 @@ class _CreateBillSellScreenState extends State<CreateBillSellScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      productModel.priceProduct.toString(),
+                      "không",
                       style: TextStyle(color: logoGreen, fontSize: 15),
                     ),
                     Text(
-                      productModel.weightProduct,
-                      style:
-                          const TextStyle(color: Colors.black54, fontSize: 14),
+                      "không",
+                      style: const TextStyle(color: Colors.black54, fontSize: 14),
                     ),
                   ],
                 ),
@@ -269,9 +274,7 @@ class _CreateBillSellScreenState extends State<CreateBillSellScreen> {
       ),
       Container(
         margin: const EdgeInsets.symmetric(horizontal: 5.0),
-        decoration: const BoxDecoration(
-            color: Colors.black12,
-            borderRadius: BorderRadius.all(Radius.circular(5.0))),
+        decoration: const BoxDecoration(color: Colors.black12, borderRadius: BorderRadius.all(Radius.circular(5.0))),
         width: 40,
         height: 25,
         child: Center(
@@ -281,25 +284,25 @@ class _CreateBillSellScreenState extends State<CreateBillSellScreen> {
           ),
         ),
       ),
-      InkWell(
-        onTap: numberOrderProduct < productModel.quantityInStock
-            ? () {
-                setState(() {
-                  if (numberOrderProduct < productModel.quantityInStock) {
-                    numberOrderProduct++;
-                  }
-                  productSelect[productModel] = numberOrderProduct;
-                });
-              }
-            : null,
-        child: Icon(
-          Icons.add,
-          size: 20,
-          color: numberOrderProduct < productModel.quantityInStock
-              ? logoGreen
-              : Colors.black26,
-        ),
-      ),
+      // InkWell(
+      //   onTap: numberOrderProduct < productModel.quantityInStock
+      //       ? () {
+      //           setState(() {
+      //             if (numberOrderProduct < productModel.quantityInStock) {
+      //               numberOrderProduct++;
+      //             }
+      //             productSelect[productModel] = numberOrderProduct;
+      //           });
+      //         }
+      //       : null,
+      //   child: Icon(
+      //     Icons.add,
+      //     size: 20,
+      //     color: numberOrderProduct < productModel.quantityInStock
+      //         ? logoGreen
+      //         : Colors.black26,
+      //   ),
+      // ),
     ]);
   }
 }

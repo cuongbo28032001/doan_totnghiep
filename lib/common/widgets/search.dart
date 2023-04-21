@@ -6,7 +6,8 @@ inPutSearch(
     {BuildContext? context,
     String? lable,
     IconData? addIcon,
-    IconData? filterIcon}) {
+    IconData? filterIcon,
+    Widget? addItem}) {
   return Container(
     color: Colors.white,
     padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -31,26 +32,29 @@ inPutSearch(
           constraints: const BoxConstraints(),
           onPressed: () {
             toast("Tạo đơn hàng");
-            Navigator.push(
-              context!,
-              MaterialPageRoute(
-                builder: (context) => const CreateBillSellScreen(),
-              ),
-            );
+            if (addItem != null) {
+              Navigator.push(
+                context!,
+                MaterialPageRoute(
+                  builder: (context) => addItem,
+                ),
+              );
+            }
           },
           icon: Icon(addIcon, color: Colors.black45),
         ),
       const SizedBox(
         width: 10,
       ),
-      IconButton(
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints(),
-        onPressed: () {
-          toast("Bộ lọc");
-        },
-        icon: Icon(filterIcon, color: Colors.black45),
-      ),
+      if (filterIcon != null)
+        IconButton(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+          onPressed: () {
+            toast("Bộ lọc");
+          },
+          icon: Icon(filterIcon, color: Colors.black45),
+        ),
     ]),
   );
 }

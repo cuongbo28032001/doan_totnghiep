@@ -1,4 +1,5 @@
 import 'package:fltn_app/views/pages/inventory_management/inventory_management.dart';
+import 'package:fltn_app/views/pages/login_page/login.dart';
 import 'package:fltn_app/views/pages/setting/setting.dart';
 import 'package:fltn_app/views/pages/sell/sell.dart';
 import 'package:fltn_app/views/pages/enter_drugs/enter_drugs.dart';
@@ -15,10 +16,8 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: "HOMESHOP",
-      theme: ThemeData(scaffoldBackgroundColor: backgroundApp),
-      home: AppContent(
+    return Scaffold(
+      body: AppContent(
         key: globalAppContent,
       ),
     );
@@ -45,6 +44,7 @@ class AppContentState extends State<AppContent> {
   }
 
   GlobalKey globalKeySell = GlobalKey();
+  GlobalKey globalKeyLogin = GlobalKey();
   GlobalKey globalKeyTemporaryOrder = GlobalKey();
   GlobalKey globalKeyHistoryOrder = GlobalKey();
   GlobalKey globalKeyMoreAction = GlobalKey();
@@ -68,9 +68,7 @@ class AppContentState extends State<AppContent> {
         break;
     }
 
-    return Navigator(
-        key: globalKey,
-        onGenerateRoute: (settings) => _onGenerateRoute(settings, context));
+    return Navigator(key: globalKey, onGenerateRoute: (settings) => _onGenerateRoute(settings, context));
   }
 
   _onGenerateRoute(settings, BuildContext context) {
@@ -88,12 +86,15 @@ class AppContentState extends State<AppContent> {
       return renderBodyQuanLyKho();
     } else if (selectedIndex == 3) {
       return renderBodyCaiDat();
+    } else if (selectedIndex == 4) {
+      return renderRoutageLogin();
     } else {
       return renderBodyBanThuoc();
     }
   }
 
   Widget? currentScreen;
+
   renderBodyBanThuoc() {
     currentScreen = const SellScreen();
     return currentScreen;
@@ -113,6 +114,11 @@ class AppContentState extends State<AppContent> {
     currentScreen = SettingScreen(
       roles: role,
     );
+    return currentScreen;
+  }
+
+  renderRoutageLogin() {
+    currentScreen = const LoginPage();
     return currentScreen;
   }
 
@@ -217,21 +223,25 @@ class AppContentState extends State<AppContent> {
     );
   }
 
-  List<String> listToastBottomBar = [
-    "Bán thuốc",
-    "Nhập thuốc",
-    "Quản lý kho",
-    "Cài đặt"
-  ];
+  List<String> listToastBottomBar = ["Bán thuốc", "Nhập thuốc", "Quản lý kho", "Cài đặt"];
 
   // globalAppContent.currentState?.selectSellTab(); để chuyển về màn bán hàng từ bất cứ đâu và xóa hết hàng đợi push
   static const sellScreenIndex = 0;
   selectSellTab() {
-    Navigator.of(globalKeySell.currentContext ?? context)
-        .popUntil((route) => route.isFirst);
+    Navigator.of(globalKeySell.currentContext ?? context).popUntil((route) => route.isFirst);
     setState(
       () {
         selectedIndex = sellScreenIndex;
+      },
+    );
+  }
+
+  static const loginIndex = 4;
+  selectLoginTab() {
+    Navigator.of(globalKeyLogin.currentContext ?? context).popUntil((route) => route.isFirst);
+    setState(
+      () {
+        selectedIndex = loginIndex;
       },
     );
   }

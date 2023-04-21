@@ -1,11 +1,15 @@
 import 'package:external_app_launcher/external_app_launcher.dart';
 import 'package:fltn_app/common/widgets/card_layout.dart';
+import 'package:fltn_app/views/App.dart';
 import 'package:fltn_app/views/pages/setting/Personal/PersonalScreen.dart';
+import 'package:fltn_app/views/pages/setting/employee_manager/employee_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../common/widgets/divider.dart';
 import '../../../common/widgets/menu_MorecAtion.dart';
 import '../../../common/widgets/showToast.dart';
 import '../../../consts/colorsTheme.dart';
+import '../../../model/securityModel.dart';
 
 // ignore: must_be_immutable
 class SettingScreen extends StatefulWidget {
@@ -45,10 +49,18 @@ class _SettingScreenState extends State<SettingScreen> {
           CardLayoutWidget(
             child: Column(
               children: [
-                renderItemMenu(icon: Icons.group, title: "Danh sách nhân viên"),
-                divider(context: context),
                 renderItemMenu(
-                    icon: Icons.person_add_alt_1, title: "Thêm nhân viên")
+                  icon: Icons.group,
+                  title: "Quản lý nhân viên",
+                  onClick: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EmployeeScreen(),
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -58,8 +70,7 @@ class _SettingScreenState extends State<SettingScreen> {
           CardLayoutWidget(
             child: Column(
               children: [
-                renderItemMenu(
-                    icon: Icons.receipt_long, title: "Danh sách hóa đơn"),
+                renderItemMenu(icon: Icons.receipt_long, title: "Danh sách hóa đơn"),
               ],
             ),
           ),
@@ -67,15 +78,21 @@ class _SettingScreenState extends State<SettingScreen> {
             height: 16.0,
           ),
           CardLayoutWidget(
-              child: renderItemMenu(icon: Icons.logout, title: "Đăng xuất")),
+              child: renderItemMenu(
+                  icon: Icons.logout,
+                  title: "Đăng xuất",
+                  onClick: () {
+                    globalAppContent.currentState!.selectLoginTab();
+                    Provider.of<SecurityModel>(context, listen: false).logout();
+                  })),
         ],
       ),
     );
   }
 
-  renderItemMenu({icon, title}) {
+  renderItemMenu({icon, title, onClick}) {
     return InkWell(
-      onTap: () {},
+      onTap: onClick,
       child: Row(
         children: [
           Icon(
@@ -87,10 +104,7 @@ class _SettingScreenState extends State<SettingScreen> {
           ),
           Text(
             title,
-            style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
           ),
         ],
       ),
@@ -99,7 +113,6 @@ class _SettingScreenState extends State<SettingScreen> {
 
   _gotoPersonalScreen() {
     toast("Cá nhân");
-    Navigator.push(
-        context, MaterialPageRoute(builder: (_) => const PersonScreen()));
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const PersonScreen()));
   }
 }

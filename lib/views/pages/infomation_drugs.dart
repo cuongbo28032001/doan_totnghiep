@@ -81,7 +81,7 @@ class _InfomationDrugsState extends State<InfomationDrugs> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      widget.productModel.nameProduct,
+                      "vì yêu là nhớ",
                       style: const TextStyle(
                           fontSize: 20, fontWeight: FontWeight.w600),
                     ),
@@ -94,14 +94,14 @@ class _InfomationDrugsState extends State<InfomationDrugs> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      widget.productModel.priceProduct.toString(),
+                      "không có ngày về",
                       style: TextStyle(
                           color: logoGreen,
                           fontSize: 18,
                           fontWeight: FontWeight.w600),
                     ),
                     Text(
-                      "Mã thuốc: ${widget.productModel.codeProduct}",
+                      "Mã thuốc: 1920",
                       style: const TextStyle(
                           fontSize: 12,
                           color: Colors.black54,

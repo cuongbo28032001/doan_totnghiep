@@ -1,6 +1,4 @@
-
 import 'package:flutter/material.dart';
-import '../../../common/no_oder/no_oder.dart';
 import '../../../consts/colorsTheme.dart';
 
 class EnterdrugsScreen extends StatefulWidget {
