@@ -17,6 +17,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: AppContent(
         key: globalAppContent,
       ),
@@ -44,10 +45,9 @@ class AppContentState extends State<AppContent> {
   }
 
   GlobalKey globalKeySell = GlobalKey();
+  GlobalKey globalKeyEnterDrug = GlobalKey();
+  GlobalKey globalKeySetting = GlobalKey();
   GlobalKey globalKeyLogin = GlobalKey();
-  GlobalKey globalKeyTemporaryOrder = GlobalKey();
-  GlobalKey globalKeyHistoryOrder = GlobalKey();
-  GlobalKey globalKeyMoreAction = GlobalKey();
   late int role = 0;
 
   _renderBody() {
@@ -58,17 +58,19 @@ class AppContentState extends State<AppContent> {
         globalKey = globalKeySell;
         break;
       case 1:
-        globalKey = globalKeyTemporaryOrder;
+        globalKey = globalKeyEnterDrug;
         break;
       case 2:
-        globalKey = globalKeyHistoryOrder;
+        globalKey = globalKeySetting;
         break;
       case 3:
-        globalKey = globalKeyMoreAction;
+        globalKey = globalKeyLogin;
         break;
     }
 
-    return Navigator(key: globalKey, onGenerateRoute: (settings) => _onGenerateRoute(settings, context));
+    return Navigator(
+        key: globalKey,
+        onGenerateRoute: (settings) => _onGenerateRoute(settings, context));
   }
 
   _onGenerateRoute(settings, BuildContext context) {
@@ -83,10 +85,8 @@ class AppContentState extends State<AppContent> {
     } else if (selectedIndex == 1) {
       return renderBodyNhapThuoc();
     } else if (selectedIndex == 2) {
-      return renderBodyQuanLyKho();
-    } else if (selectedIndex == 3) {
       return renderBodyCaiDat();
-    } else if (selectedIndex == 4) {
+    } else if (selectedIndex == 3) {
       return renderRoutageLogin();
     } else {
       return renderBodyBanThuoc();
@@ -161,24 +161,8 @@ class AppContentState extends State<AppContent> {
               ),
               color: Colors.white,
               activeColor: logoOrange),
-          if (role != 1)
-            _renderBarButton(
-                index: 2,
-                title: 'Quản lý kho',
-                icon: const Icon(
-                  Icons.inventory_2_rounded,
-                  color: Colors.white,
-                  size: 26,
-                ),
-                activeIcon: Icon(
-                  Icons.inventory_2_rounded,
-                  color: logoOrange,
-                  size: 30,
-                ),
-                color: Colors.white,
-                activeColor: logoOrange),
           _renderBarButton(
-              index: 3,
+              index: 2,
               title: 'Cài đặt',
               icon: const Icon(
                 Icons.settings,
@@ -223,12 +207,16 @@ class AppContentState extends State<AppContent> {
     );
   }
 
-  List<String> listToastBottomBar = ["Bán thuốc", "Nhập thuốc", "Quản lý kho", "Cài đặt"];
+  List<String> listToastBottomBar = [
+    "Bán thuốc",
+    "Nhập thuốc",
+    "Quản lý kho",
+    "Cài đặt"
+  ];
 
   // globalAppContent.currentState?.selectSellTab(); để chuyển về màn bán hàng từ bất cứ đâu và xóa hết hàng đợi push
   static const sellScreenIndex = 0;
   selectSellTab() {
-    Navigator.of(globalKeySell.currentContext ?? context).popUntil((route) => route.isFirst);
     setState(
       () {
         selectedIndex = sellScreenIndex;
@@ -236,9 +224,19 @@ class AppContentState extends State<AppContent> {
     );
   }
 
-  static const loginIndex = 4;
+  static const enterDrugScreenIndex = 1;
+  selectedEnterDrugTap() {
+    setState(
+      () {
+        selectedIndex = enterDrugScreenIndex;
+      },
+    );
+  }
+
+  static const loginIndex = 3;
   selectLoginTab() {
-    Navigator.of(globalKeyLogin.currentContext ?? context).popUntil((route) => route.isFirst);
+    Navigator.of(globalKeyLogin.currentContext ?? context)
+        .popUntil((route) => route.isFirst);
     setState(
       () {
         selectedIndex = loginIndex;

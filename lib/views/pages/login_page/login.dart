@@ -1,13 +1,6 @@
-import 'dart:convert';
-
 import 'package:fltn_app/views/App.dart';
-import 'package:fltn_app/views/pages/setting/employee_manager/add_employee.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../../api.dart';
 import '../../../common/widgets/common_app.dart';
 import '../../../consts/colorsTheme.dart';
@@ -31,8 +24,8 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  TextEditingController _username = TextEditingController();
-  TextEditingController _password = TextEditingController();
+  final TextEditingController _username = TextEditingController();
+  final TextEditingController _password = TextEditingController();
   bool forgotPassword = false;
   late bool _passwordVisible = true;
 
@@ -41,10 +34,13 @@ class _LoginPageState extends State<LoginPage> {
     var loginResponse = await httpPost("/api/auth/signin", loginRequest, context);
     if (loginResponse.containsKey("body")) {
       var body = loginResponse["body"];
+      print(body);
+      // ignore: use_build_context_synchronously
       Provider.of<SecurityModel>(context, listen: false).setAuthorization(
         authorization: body["token"],
         userName: _username.text,
         passWord: _password.text,
+        role: body["roles"],
       );
       return true;
     }
@@ -55,8 +51,8 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        padding: EdgeInsets.all(20),
-        decoration: BoxDecoration(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
           color: Color.fromARGB(255, 236, 249, 251),
         ),
         child: Column(
@@ -64,49 +60,43 @@ class _LoginPageState extends State<LoginPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             CommonApp().sizeBoxWidget(height: 20),
-            const Text(
+            Text(
               "Đăng nhập",
-              style: TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.w400,
-              ),
+              style: TextStyle(fontSize: 25, fontWeight: FontWeight.w600, color: logoGreen),
             ),
+
             CommonApp().sizeBoxWidget(height: 50),
             renderUserName(),
-            CommonApp().sizeBoxWidget(height: 25),
+            CommonApp().sizeBoxWidget(height: 30),
             renderPasword(),
-            CommonApp().sizeBoxWidget(height: 25),
+            CommonApp().sizeBoxWidget(height: 50),
             // renderRowBottom(),
             // CommonApp().sizeBoxWidget(height: 23),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 300,
-                  padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                  decoration: BoxDecoration(color: logoGreen, borderRadius: BorderRadius.circular(8)),
-                  child: TextButton(
-                    onPressed: () async {
-                      bool result = false;
-                      if (_username.text.isNotEmpty && _password.text.isNotEmpty) {
-                        // res =
-                        result = await handleLogin(userName: _username.text, password: _password.text);
-                        if (result == true) {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => const App()));
-                        }
-                      } else {
-                        // showToast(
-                        // context: context, msg: "yêu cầu nhập tài khoản và mật khẩu", color: Colors.red, icon: Icon(Icons.error_outline));
-                      }
-                    },
-                    child: const Text(
-                      'Đăng nhập',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+              decoration: BoxDecoration(color: logoOrange, borderRadius: BorderRadius.circular(8)),
+              child: InkWell(
+                onTap: () async {
+                  bool result = false;
+                  if (_username.text.isNotEmpty && _password.text.isNotEmpty) {
+                    // res =
+                    result = await handleLogin(userName: _username.text, password: _password.text);
+                    if (result == true) {
+                      // ignore: use_build_context_synchronously
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const App()));
+                    }
+                  } else {
+                    // showToast(
+                    // context: context, msg: "yêu cầu nhập tài khoản và mật khẩu", color: Colors.red, icon: Icon(Icons.error_outline));
+                  }
+                },
+                child: const Text(
+                  'Đăng nhập',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                  textAlign: TextAlign.center,
                 ),
-              ],
+              ),
             )
           ],
         ),
@@ -181,18 +171,20 @@ class _LoginPageState extends State<LoginPage> {
         labelText: 'Mật khẩu',
         // labelStyle: textInput,
         // hintStyle: textInput,
-        border: OutlineInputBorder(borderSide: BorderSide(width: 0.5, color: Colors.black), borderRadius: BorderRadius.all(Radius.circular(10))),
-        enabledBorder: const OutlineInputBorder(
+        labelStyle: TextStyle(color: logoGreen),
+        border:
+            const OutlineInputBorder(borderSide: BorderSide(width: 0.5, color: Colors.black), borderRadius: BorderRadius.all(Radius.circular(10))),
+        focusedBorder: OutlineInputBorder(
             borderSide: BorderSide(
-              width: 0.5,
-              color: Colors.black,
+              width: 1,
+              color: logoGreen,
             ),
-            borderRadius: BorderRadius.all(Radius.circular(10))),
+            borderRadius: const BorderRadius.all(Radius.circular(10))),
         contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
         suffixIcon: IconButton(
           icon: Icon(
-            _passwordVisible ? Icons.visibility : Icons.visibility_off,
-            color: Theme.of(context).primaryColorDark,
+            !_passwordVisible ? Icons.visibility : Icons.visibility_off,
+            color: !_passwordVisible ? logoGreen : Colors.black38,
           ),
           onPressed: () {
             setState(() {
@@ -221,15 +213,16 @@ class _LoginPageState extends State<LoginPage> {
       // style: TextStyle(color: Colors.red),
       decoration: InputDecoration(
         labelText: 'Tên đăng nhập',
-        // labelStyle: GoogleFonts.montserrat(color: Colors.black),
+        labelStyle: TextStyle(color: logoGreen),
         // hintStyle: GoogleFonts.montserrat(color: Colors.black),
-        border: OutlineInputBorder(borderSide: BorderSide(width: 0.5, color: Colors.black), borderRadius: BorderRadius.all(Radius.circular(10))),
-        enabledBorder: const OutlineInputBorder(
+        border:
+            const OutlineInputBorder(borderSide: BorderSide(width: 0.5, color: Colors.black), borderRadius: BorderRadius.all(Radius.circular(10))),
+        focusedBorder: OutlineInputBorder(
             borderSide: BorderSide(
-              width: 0.5,
-              color: Colors.black,
+              width: 1,
+              color: logoGreen,
             ),
-            borderRadius: BorderRadius.all(Radius.circular(10))),
+            borderRadius: const BorderRadius.all(Radius.circular(10))),
         contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
         hintText: 'Tên đăng nhập',
       ),

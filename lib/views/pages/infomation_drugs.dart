@@ -1,8 +1,18 @@
+import 'dart:math';
+
 import 'package:fltn_app/common/widgets/card_layout.dart';
-import 'package:fltn_app/stores/model/productModel.dart';
+import 'package:fltn_app/common/widgets/input_layout.dart';
+import 'package:fltn_app/common/widgets/showToast.dart';
+import 'package:fltn_app/model/productModel.dart';
+import 'package:fltn_app/url.dart';
+import 'package:fltn_app/views/App.dart';
+import 'package:fltn_app/views/pages/Sell/sell.dart';
+import 'package:fltn_app/views/pages/enter_drugs/add_update_drugs.dart';
 import 'package:flutter/material.dart';
+import '../../api.dart';
 import '../../consts/colorsTheme.dart';
 
+// ignore: must_be_immutable
 class InfomationDrugs extends StatefulWidget {
   ProductModel productModel;
   InfomationDrugs({super.key, required this.productModel});
@@ -13,6 +23,36 @@ class InfomationDrugs extends StatefulWidget {
 
 class _InfomationDrugsState extends State<InfomationDrugs> {
   late int numberOrderProduct = 0;
+  String? error;
+  late TextEditingController controllerSoLo = TextEditingController();
+
+  callAPILoThuoc(object) async {
+    try {
+      var response = await httpPost('/api/lothuoc/create', object, context);
+      if (response.containsKey("body")) {
+        var body = response["body"];
+        print(body);
+        setState(() {
+          error = body["desc"];
+        });
+        if (error!.compareTo("THÊM MỚI THÀNH CÔNG") == 0) {
+          toast(error!);
+        } else {
+          toast(error!);
+        }
+      }
+    } catch (e) {
+      return e;
+    }
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    controllerSoLo.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,38 +78,21 @@ class _InfomationDrugsState extends State<InfomationDrugs> {
           height: 200,
           decoration: BoxDecoration(
             border: Border.all(width: 0.1, color: logoGreen),
-            image: const DecorationImage(
-                image: AssetImage("assets/images/LogoApp.png"),
-                fit: BoxFit.contain),
+            image: widget.productModel.image == null
+                ? const DecorationImage(
+                    image: AssetImage("assets/images/image_local.png"),
+                    fit: BoxFit.contain)
+                : DecorationImage(
+                    image: NetworkImage(
+                      '$baseUrl/api/thuoc/image/${widget.productModel.id}?timestamp=${Random().nextInt(10000)}',
+                    ),
+                  ),
             color: Colors.white,
             borderRadius: const BorderRadius.all(Radius.circular(20.0)),
           ),
         ),
         const SizedBox(
           height: 16.0,
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
-            decoration: BoxDecoration(
-                color: logoGreen,
-                border: Border.all(width: 0.5, color: logoGreen),
-                borderRadius: const BorderRadius.all(
-                  Radius.circular(5.0),
-                )),
-            child: const Text(
-              "Tạo đơn",
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600),
-            ),
-          ),
-        ),
-        const SizedBox(
-          height: 10.0,
         ),
         CardLayoutWidget(
           child: Column(
@@ -81,27 +104,12 @@ class _InfomationDrugsState extends State<InfomationDrugs> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "vì yêu là nhớ",
+                      widget.productModel.tenThuoc!,
                       style: const TextStyle(
                           fontSize: 20, fontWeight: FontWeight.w600),
                     ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
                     Text(
-                      "không có ngày về",
-                      style: TextStyle(
-                          color: logoGreen,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      "Mã thuốc: 1920",
+                      widget.productModel.maThuoc ?? '',
                       style: const TextStyle(
                           fontSize: 12,
                           color: Colors.black54,
@@ -119,64 +127,174 @@ class _InfomationDrugsState extends State<InfomationDrugs> {
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
+                children: [
+                  const Text(
                     "Thành phần",
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   Text(
-                    "Mỗi viên nén bao phim chứa\nDược chất: Thiamine mononitrate (vitamin B1)\t100 mg\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tPyridoxine HCl (vitamin B6)\t200 mg\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tCyanocobalamin (vitamin B12)\t200 mcg\nTá dược: Microcrystalline cellulose, calcium hydrogen phosphate dihydrate, povidone K30, croscarmellose sodium, sodium starch glycolate, stearic acid, magnesium stearate, colloidal silicon dioxide, methacrylic acid-methyl methacrylate copolymer (1:1), talc, triethyl citrate, sepifilm LP 770.",
-                    style: TextStyle(height: 1.5),
+                    widget.productModel.thanhPhan ?? '',
+                    style: const TextStyle(height: 1.5),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 10.0,
                   ),
-                  Text(
+                  const Text(
                     "Chỉ định",
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   Text(
-                    "Điều trị các trường hợp thiếu vitamin B1, B6, B12 như: viêm đau dây thần kinh, bệnh lý dây thần kinh do thuốc, do nghiện rượu...",
-                    style: TextStyle(height: 1.5),
+                    widget.productModel.huongDanSuDung ?? '',
+                    style: const TextStyle(height: 1.5),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 10.0,
                   ),
-                  Text(
+                  const Text(
                     "Liều dùng và cách sử dụng",
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   Text(
-                    "Uống 1 đến 3 viên mỗi ngày, hoặc theo chỉ định của thầy thuốc.",
-                    style: TextStyle(height: 1.5),
+                    widget.productModel.lieuLuong ?? '',
+                    style: const TextStyle(height: 1.5),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 10.0,
                   ),
-                  Text(
+                  const Text(
                     "Chống chỉ định",
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   Text(
-                    "- Bệnh nhân mẫn cảm với thành phần của thuốc, hoặc có tiền sử dị ứng với vitamin B1, B12 hay các cobalamin.\n- U ác tính.\n- Người bệnh có cơ địa dị ứng (hen, eczema).",
-                    style: TextStyle(height: 1.5),
+                    widget.productModel.chongChiDinh ?? '',
+                    style: const TextStyle(height: 1.5),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 10.0,
                   ),
-                  Text(
+                  const Text(
                     "Bảo quản",
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   Text(
-                    "Dưới 30°C. Tránh ẩm và ánh sáng.",
-                    style: TextStyle(height: 1.5),
+                    widget.productModel.baoQuan ?? '',
+                    style: const TextStyle(height: 1.5),
                   ),
                 ],
               )
             ],
           ),
         ),
+        const SizedBox(
+          height: 16.0,
+        ),
+        Align(
+            alignment: Alignment.centerRight,
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: InkWell(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext contextDialog) {
+                          return AlertDialog(
+                            title: const Text(
+                              "Thêm lô thuốc",
+                              textAlign: TextAlign.center,
+                            ),
+                            titleTextStyle: TextStyle(
+                                color: logoGreen,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600),
+                            content: InputFormWidget(
+                              controller: controllerSoLo,
+                            ),
+                            actions: [
+                              TextButton(
+                                child: Text(
+                                  "Tiếp tục",
+                                  style: TextStyle(color: logoOrange),
+                                ),
+                                onPressed: () async {
+                                  await callAPILoThuoc({
+                                    'soLo': controllerSoLo.text,
+                                    'thuoc': widget.productModel.id
+                                  });
+                                  if (error
+                                          .toString()
+                                          .compareTo('THÊM MỚI THÀNH CÔNG') ==
+                                      0) {
+                                    Navigator.pop(contextDialog);
+                                    Navigator.pop(context);
+                                  }
+                                },
+                              )
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10.0, vertical: 10.0),
+                      decoration: BoxDecoration(
+                          color: logoOrange,
+                          border: Border.all(width: 0.5, color: logoOrange),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(5.0),
+                          )),
+                      child: const Text(
+                        "Thêm lô thuốc",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  width: 20.0,
+                ),
+                Expanded(
+                  flex: 1,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddUpdateInfoDrugsSCreen(
+                            title: "Chỉnh sửa",
+                            productModel: widget.productModel,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10.0, vertical: 10.0),
+                      decoration: BoxDecoration(
+                          color: logoOrange,
+                          border: Border.all(width: 0.5, color: logoOrange),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(5.0),
+                          )),
+                      child: const Text(
+                        "Chỉnh sửa",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )),
       ],
     );
   }

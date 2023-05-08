@@ -1,5 +1,4 @@
 import 'package:fltn_app/common/widgets/showToast.dart';
-import 'package:fltn_app/views/pages/sell/create_bill.dart';
 import 'package:flutter/material.dart';
 
 inPutSearch(
@@ -7,13 +6,24 @@ inPutSearch(
     String? lable,
     IconData? addIcon,
     IconData? filterIcon,
-    Widget? addItem}) {
+    Widget? addItem,
+    Function? onSubmitted,
+    TextEditingController? controller,
+    Function(String query)? callBack,
+    InkWell? suffixIcon}) {
   return Container(
     color: Colors.white,
     padding: const EdgeInsets.symmetric(horizontal: 10.0),
     child: Row(children: [
       Expanded(
           child: TextFormField(
+        controller: controller,
+        onFieldSubmitted: (value) {
+          if (onSubmitted != null) {
+            onSubmitted(value);
+          }
+        },
+        onChanged: callBack,
         decoration: InputDecoration(
             hintText: lable,
             icon: const Icon(

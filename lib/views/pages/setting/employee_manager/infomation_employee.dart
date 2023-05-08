@@ -1,13 +1,19 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'package:fltn_app/common/date_form_field.dart';
 import 'package:fltn_app/common/validate_form.dart';
-import 'package:fltn_app/common/widgets/card_layout.dart';
 import 'package:fltn_app/common/widgets/input_layout.dart';
-import 'package:fltn_app/stores/model/employeeModel.dart';
-import 'package:fltn_app/stores/model/productModel.dart';
+import 'package:fltn_app/model/employeeModel.dart';
+import 'package:fltn_app/views/pages/setting/employee_manager/employee_manager.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../api.dart';
 import '../../../../common/widgets/showToast.dart';
 import '../../../../consts/colorsTheme.dart';
+// ignore: unused_import, depend_on_referenced_packages
+import 'package:intl/intl.dart';
 
+// ignore: must_be_immutable
 class InfomaEmployee extends StatefulWidget {
   EmployeeModel employeeModel;
   InfomaEmployee({super.key, required this.employeeModel});
@@ -17,40 +23,75 @@ class InfomaEmployee extends StatefulWidget {
 }
 
 class _InfomaEmployeeState extends State<InfomaEmployee> {
-  late String _passWord = '';
-  late String _numberPhone = '';
-  late TextEditingController controllerPassWord;
+  late String error = '';
   late TextEditingController controllerNumberPhone;
+  late TextEditingController controllerEmail;
+  late TextEditingController controllerCCCD;
+  late TextEditingController controllerBirthDay;
   final formkey = GlobalKey<FormState>();
+
+  callApiDeleteEmployee(id) async {
+    try {
+      var response = await httpDelete('/api/auth/status/$id', context);
+      if (response['body']['desc']
+              .toString()
+              .compareTo('CẬP NHẬT THÀNH CÔNG') ==
+          0) {
+        toast("Xóa thành công!");
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const EmployeeScreen()));
+      }
+    } catch (e) {
+      return e;
+    }
+  }
+
+  callApiUpdateEmployee(object) async {
+    try {
+      var response = await httpPut('/api/auth/update', object, context);
+      if (response.containsKey("body")) {
+        print(response["body"]);
+        var body = response["body"]["desc"];
+        setState(() {
+          error = body;
+        });
+      }
+    } catch (e) {
+      toast('Lỗi!');
+    }
+  }
+
+  String convertToDate(int value) {
+    DateTime dateTime;
+    dateTime = DateTime.fromMillisecondsSinceEpoch(value);
+    var date = DateFormat('yyyy-MM-dd').format(dateTime);
+    return date;
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    controllerEmail =
+        TextEditingController(text: widget.employeeModel.email ?? '');
+    controllerCCCD =
+        TextEditingController(text: widget.employeeModel.cccd ?? '');
     controllerNumberPhone =
-        TextEditingController(text: widget.employeeModel.numberPhone);
-    controllerPassWord =
-        TextEditingController(text: widget.employeeModel.passWord);
+        TextEditingController(text: widget.employeeModel.phone ?? '');
+    controllerBirthDay = TextEditingController(
+        text: widget.employeeModel.birthDay.toString().compareTo("null") == 0
+            ? ''
+            : convertToDate(widget.employeeModel.birthDay!));
   }
 
   @override
   void dispose() {
     // TODO: implement dispose
     super.dispose();
+    controllerEmail.dispose();
     controllerNumberPhone.dispose();
-    controllerPassWord.dispose();
-  }
-
-  _onInputNewPass(value) {
-    setState(() {
-      _passWord = value;
-    });
-  }
-
-  _onInputNewNumberPhone(value) {
-    setState(() {
-      _numberPhone = value;
-    });
+    controllerBirthDay.dispose();
+    controllerCCCD.dispose();
   }
 
   @override
@@ -62,8 +103,8 @@ class _InfomaEmployeeState extends State<InfomaEmployee> {
         title: const Text("Thông tin nhân viên"),
         actions: [
           IconButton(
-              onPressed: () {
-                toast("Xóa nhân viên mã ${widget.employeeModel.id}");
+              onPressed: () async {
+                await callApiDeleteEmployee(widget.employeeModel.id);
               },
               icon: const Icon(Icons.delete))
         ],
@@ -90,8 +131,8 @@ class _InfomaEmployeeState extends State<InfomaEmployee> {
             height: 10.0,
           ),
           InputFormWidget(
-            controller:
-                TextEditingController(text: widget.employeeModel.userName),
+            controller: TextEditingController(
+                text: widget.employeeModel.username ?? ''),
             label: 'Tài khoản',
             redonly: true,
           ),
@@ -99,13 +140,9 @@ class _InfomaEmployeeState extends State<InfomaEmployee> {
             height: 10.0,
           ),
           InputFormWidget(
-            note: true,
-            controller: controllerPassWord,
-            label: 'Mật khẩu',
-            callback: (value) {
-              _onInputNewPass(value);
-            },
-            valid: ValidateForm().validatePass,
+            controller: controllerEmail,
+            label: 'Email',
+            valid: ValidateForm().validateEmail,
           ),
           const SizedBox(
             height: 10.0,
@@ -113,19 +150,14 @@ class _InfomaEmployeeState extends State<InfomaEmployee> {
           InputFormWidget(
             controller: controllerNumberPhone,
             label: 'Số điện thoại',
-            callback: (value) {
-              _onInputNewNumberPhone(value);
-            },
             valid: ValidateForm().validateNumber,
           ),
           const SizedBox(
             height: 10.0,
           ),
-          InputFormWidget(
-            controller: TextEditingController(
-                text: widget.employeeModel.age.toString()),
-            label: 'Tuổi',
-            redonly: true,
+          renderDate(
+            controller: controllerBirthDay,
+            label: "Ngày sinh",
           ),
           const SizedBox(
             height: 10.0,
@@ -140,24 +172,48 @@ class _InfomaEmployeeState extends State<InfomaEmployee> {
             height: 10.0,
           ),
           InputFormWidget(
-            controller:
-                TextEditingController(text: widget.employeeModel.idNumber),
+            controller: TextEditingController(
+                text: widget.employeeModel.cccd.toString()),
             label: 'Số CMT',
-            redonly: true,
           ),
           const SizedBox(
             height: 32.0,
           ),
           InkWell(
             onTap: (controllerNumberPhone.text
-                            .compareTo(widget.employeeModel.numberPhone) !=
+                            .compareTo(widget.employeeModel.phone ?? '') !=
                         0 ||
-                    controllerPassWord.text
-                            .compareTo(widget.employeeModel.passWord) !=
+                    controllerBirthDay.text.compareTo(
+                            widget.employeeModel.birthDay.toString()) !=
+                        0 ||
+                    controllerCCCD.text
+                            .compareTo(widget.employeeModel.cccd ?? '') !=
                         0)
-                ? () {
+                ? () async {
                     if (formkey.currentState!.validate()) {
-                      toast("Sửa thành công");
+                      var data = {
+                        'id': widget.employeeModel.id,
+                        'name': widget.employeeModel.name,
+                        'email': controllerEmail.text,
+                        'username': widget.employeeModel.username,
+                        'password': widget.employeeModel.password,
+                        'phone': controllerNumberPhone.text,
+                        'sex': widget.employeeModel.sex,
+                        'birthDay': controllerBirthDay.text,
+                        'roles': widget.employeeModel.roles,
+                        "deleted": widget.employeeModel.deleted,
+                        'cccd': controllerCCCD.text
+                      };
+                      await callApiUpdateEmployee(data);
+                      if (error.compareTo('CẬP NHẬT THÀNH CÔNG') == 0) {
+                        toast(error);
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const EmployeeScreen()));
+                      } else {
+                        toast(error);
+                      }
                     }
                   }
                 : null,
@@ -170,10 +226,13 @@ class _InfomaEmployeeState extends State<InfomaEmployee> {
                     Radius.circular(8.0),
                   ),
                   color: (controllerNumberPhone.text.compareTo(
-                                  widget.employeeModel.numberPhone) !=
+                                  widget.employeeModel.phone ?? '') !=
                               0 ||
-                          controllerPassWord.text
-                                  .compareTo(widget.employeeModel.passWord) !=
+                          controllerBirthDay.text.compareTo(
+                                  widget.employeeModel.birthDay.toString()) !=
+                              0 ||
+                          controllerCCCD.text
+                                  .compareTo(widget.employeeModel.cccd ?? '') !=
                               0)
                       ? logoOrange
                       : Colors.black12),

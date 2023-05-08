@@ -1,4 +1,3 @@
-import 'package:fltn_app/common/widgets/divider.dart';
 import 'package:fltn_app/consts/colorsTheme.dart';
 import 'package:flutter/material.dart';
 

@@ -1,8 +1,11 @@
 import 'dart:convert';
 
+import 'package:fltn_app/model/user.dart';
 import 'package:flutter/material.dart';
 import 'package:localstorage/localstorage.dart';
+// ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
+import 'dart:developer' as dev;
 import 'package:jwt_decode/jwt_decode.dart';
 import '../url.dart';
 
@@ -12,17 +15,20 @@ class SecurityModel extends ChangeNotifier {
   String? authorization;
   dynamic userLogin;
   // dynamic userRole;
+  String? roleUser;
   String? userName;
   String? passWord;
   bool rememberMe = false;
 
   SecurityModel(this.storage) {
+    roleUser = storage.getItem("roleUser");
     authorization = storage.getItem("authorization");
     userLogin = storage.getItem("userLogin");
     // userRole = storage.getItem("userRole");
     authenticated = authorization != null;
     userName = storage.getItem("userName");
     passWord = storage.getItem("passWord");
+    User().userName = storage.getItem('userName');
   }
 
   void logout() {
@@ -34,7 +40,8 @@ class SecurityModel extends ChangeNotifier {
     // authorization = null;
     // reloadPage = null;
     // this.userRole = null;
-    this.userLogin = null;
+    userLogin = null;
+    User().userName = null;
     // storage.setItem("reloadPage", null);
     // storage.deleteItem('userName');
     notifyListeners();
@@ -42,8 +49,12 @@ class SecurityModel extends ChangeNotifier {
 
   logoutServer() async {
     try {
-      Map<String, String> headers = {'content-type': 'application/json', 'Authorization': "Bearer $authorization"};
-      var response = await http.get(Uri.parse("$baseUrl/api/logout"), headers: headers);
+      Map<String, String> headers = {
+        'content-type': 'application/json',
+        'Authorization': "Bearer $authorization"
+      };
+      var response =
+          await http.get(Uri.parse("$baseUrl/api/logout"), headers: headers);
       // if (response.statusCode == 200) {
       //   var userLoginGetResponse = json.decode(response.body);
       //   if (userLoginGetResponse["success"] == true) {
@@ -52,22 +63,41 @@ class SecurityModel extends ChangeNotifier {
       //   }
       // }
     } catch (e) {
-      print(e);
+      dev.log(e.toString());
     }
   }
 
-  setAuthorization({String? authorization, var userName, String? passWord}) async {
+  setAuthorization(
+      {String? authorization,
+      var userName,
+      String? passWord,
+      List<dynamic>? role}) async {
     authenticated = (authorization != null) ? true : false;
     storage.setItem("authorization", "$authorization");
-    print(authorization);
+    dev.log(authorization.toString());
     // await setInforUser(userName: userName, authorization: authorization);
     this.authorization = authorization;
     this.userName = userName;
     storage.setItem("userName", userName);
     this.passWord = passWord;
     storage.setItem("passWord", passWord);
-    notifyListeners();
+    print("-------------------");
+    print(role);
+    if (role != null) {
+      if (role.contains("ROLE_ADMIN")) {
+        this.roleUser = "ROLE_ADMIN";
+        storage.setItem("roleUser", "ROLE_ADMIN");
+      } else {
+        this.roleUser = "ROLE_USER";
+        storage.setItem("roleUser", "ROLE_USER");
+      }
+    } else {
+      this.roleUser = null;
+      storage.setItem("roleUser", null);
+    }
 
+    User().userName = userName;
+    notifyListeners();
     SecurityModel(storage);
   }
 
@@ -77,9 +107,14 @@ class SecurityModel extends ChangeNotifier {
     if (authorization != null) {
       String token = authorization;
       Map<String, dynamic> user = Jwt.parseJwt(token);
-      print("object${user}");
-      Map<String, String> headers = {'content-type': 'application/json', 'Authorization': "Bearer $authorization"};
-      var response = await http.get(Uri.parse("$baseUrl/api/tbl-user/get/${user["haivn"]["userId"]}"), headers: headers);
+      dev.log("objectL: $user");
+      Map<String, String> headers = {
+        'content-type': 'application/json',
+        'Authorization': "Bearer $authorization"
+      };
+      var response = await http.get(
+          Uri.parse("$baseUrl/api/tbl-user/get/${user["haivn"]["userId"]}"),
+          headers: headers);
       if (response.statusCode == 200) {
         var userLoginGetResponse = json.decode(response.body);
         if (userLoginGetResponse["success"] == true) {

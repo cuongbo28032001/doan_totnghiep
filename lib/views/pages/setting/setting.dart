@@ -1,13 +1,9 @@
-import 'package:external_app_launcher/external_app_launcher.dart';
 import 'package:fltn_app/common/widgets/card_layout.dart';
 import 'package:fltn_app/views/App.dart';
-import 'package:fltn_app/views/pages/setting/Personal/PersonalScreen.dart';
+import 'package:fltn_app/views/pages/list_bill.dart';
 import 'package:fltn_app/views/pages/setting/employee_manager/employee_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../common/widgets/divider.dart';
-import '../../../common/widgets/menu_MorecAtion.dart';
-import '../../../common/widgets/showToast.dart';
 import '../../../consts/colorsTheme.dart';
 import '../../../model/securityModel.dart';
 
@@ -32,17 +28,32 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 
   _renderBodyMoreAction(context) {
+    var securityModel = Provider.of<SecurityModel>(context, listen: false);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          CardLayoutWidget(
-            child: Column(
-              children: [
-                renderItemMenu(icon: Icons.person, title: "Cá nhân"),
-              ],
-            ),
-          ),
+          securityModel.roleUser == "ROLE_ADMIN"
+              ? CardLayoutWidget(
+                  child: Column(
+                    children: [
+                      renderItemMenu(
+                        icon: Icons.group,
+                        title: "Quản lý nhân viên",
+                        onClick: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const EmployeeScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                )
+              : Container(),
           const SizedBox(
             height: 16.0,
           ),
@@ -50,27 +61,14 @@ class _SettingScreenState extends State<SettingScreen> {
             child: Column(
               children: [
                 renderItemMenu(
-                  icon: Icons.group,
-                  title: "Quản lý nhân viên",
-                  onClick: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const EmployeeScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(
-            height: 16.0,
-          ),
-          CardLayoutWidget(
-            child: Column(
-              children: [
-                renderItemMenu(icon: Icons.receipt_long, title: "Danh sách hóa đơn"),
+                    icon: Icons.receipt_long,
+                    title: "Danh sách hóa đơn",
+                    onClick: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const ListBillScreen()));
+                    }),
               ],
             ),
           ),
@@ -104,15 +102,13 @@ class _SettingScreenState extends State<SettingScreen> {
           ),
           Text(
             title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
+            style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87),
           ),
         ],
       ),
     );
-  }
-
-  _gotoPersonalScreen() {
-    toast("Cá nhân");
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const PersonScreen()));
   }
 }

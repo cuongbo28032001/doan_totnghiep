@@ -1,24 +1,12 @@
+import 'package:fltn_app/consts/colorsTheme.dart';
 import 'package:flutter/material.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 Widget loadingCallAPi({String? contentLoading}) {
-  return Container(
-    margin: EdgeInsets.only(top: 150),
-    child: Column(
-      // crossAxisAlignment: CrossAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Center(child: CircularProgressIndicator()),
-        SizedBox(
-          height: 10,
-        ),
-        Center(
-          child: Text(
-            contentLoading ?? "Loading...",
-            style: const TextStyle(color: Color.fromARGB(255, 78, 78, 78), fontSize: 16),
-          ),
-        )
-      ],
-    ),
-  );
+  return Center(
+      child: LoadingAnimationWidget.discreteCircle(
+          secondRingColor: logoOrange,
+          thirdRingColor: logoGreen,
+          color: logoGreen,
+          size: 40));
 }

@@ -1,2 +1,1 @@
-const baseUrl = "http://10.2.0.3:8080/qlbt";
-// const baseUrl = "http://localhost:8088";
+const baseUrl = "http://192.168.1.222:8080/qlbt";

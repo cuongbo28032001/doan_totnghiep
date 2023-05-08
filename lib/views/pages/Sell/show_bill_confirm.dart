@@ -1,13 +1,101 @@
 import 'package:fltn_app/common/widgets/card_layout.dart';
+import 'package:fltn_app/common/widgets/divider.dart';
 import 'package:fltn_app/common/widgets/showToast.dart';
+import 'package:fltn_app/model/user.dart';
+import 'package:fltn_app/views/pages/Sell/sell.dart';
 import 'package:flutter/material.dart';
+import '../../../api.dart';
 import '../../../consts/colorsTheme.dart';
-import '../../../stores/model/productModel.dart';
-import '../../App.dart';
 
-class ShowBillConfirmScreen extends StatelessWidget {
-  Map<ProductModel, int> productSelect;
+// ignore: unused_import, depend_on_referenced_packages
+import 'package:intl/intl.dart';
+
+// ignore: must_be_immutable
+
+class ShowBillConfirmScreen extends StatefulWidget {
+  Map<dynamic, int> productSelect;
   ShowBillConfirmScreen({super.key, required this.productSelect});
+
+  @override
+  State<ShowBillConfirmScreen> createState() => _ShowBillConfirmScreenState();
+}
+
+class _ShowBillConfirmScreenState extends State<ShowBillConfirmScreen> {
+  List<dynamic> listProductSell = [];
+  String? error;
+  int? idHoaDon;
+
+  callApiDonXuat(object) async {
+    try {
+      var response = await httpPost('/api/don-xuat/create', object, context);
+      if (response.containsKey("body")) {
+        var body = response["body"];
+        print('api don: $body');
+        setState(() {
+          error = body["desc"];
+        });
+        if (error!.compareTo("THÊM MỚI THÀNH CÔNG") == 0) {
+          setState(() {
+            idHoaDon = body['result']['id'];
+          });
+        }
+      }
+    } catch (e) {
+      return e;
+    }
+  }
+
+  callApiChiTietDonXuat(List<dynamic> list) async {
+    try {
+      var response =
+          await httpPost('/api/chi-tiet-don-xuat/create', list, context);
+      if (response.containsKey("body")) {
+        var body = response["body"];
+        setState(() {
+          error = body["desc"];
+        });
+      }
+      if (error!.compareTo('THÊM MỚI THÀNH CÔNG') == 0) {
+        toast(error!);
+      } else {
+        toast(error!);
+      }
+    } catch (e) {
+      return e;
+    }
+  }
+
+  addListProductSell() async {
+    await callApiDonXuat({
+      'nguoiXuat': User().userName,
+      "ngayXuat": DateFormat("yyyy-MM-dd").format(DateTime.now())
+    });
+    for (var items in widget.productSelect.entries) {
+      var itemTemp = {
+        'donXuat': idHoaDon,
+        'loThuoc': items.key.id,
+        'soLuong': items.value,
+      };
+      bool isExist = false;
+      for (var post in listProductSell) {
+        if (post['loThuoc'] == itemTemp['loThuoc']) {
+          isExist = true;
+          break;
+        }
+      }
+      if (!isExist) {
+        listProductSell.add(itemTemp);
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    // addListProductSell();
+    sumMoney();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,19 +103,19 @@ class ShowBillConfirmScreen extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: logoGreen,
-        title: const Center(child: Text("Thông tin đơn hàng")),
+        title: const Text("Xác nhận đơn bán"),
       ),
-      body: renderBody(),
+      body: renderBody(context),
     );
   }
 
   int sumMoney() {
     int totalPrice = 0;
     // Lấy số lượng mua của từng sản phẩm từ map orderQuantities
-    productSelect.forEach((product, quantity) {
+    widget.productSelect.forEach((product, quantity) {
       if (quantity > 0) {
         // Tính tổng số tiền của sản phẩm hiện tại
-        int productPrice = 20;
+        int productPrice = product.giaBan;
         int productTotalPrice = productPrice * quantity;
         // Cộng vào tổng số tiền
         totalPrice += productTotalPrice;
@@ -36,22 +124,15 @@ class ShowBillConfirmScreen extends StatelessWidget {
     return totalPrice;
   }
 
-  renderBody() {
+  renderBody(context) {
     int sumMoeny = sumMoney();
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
       child: Column(
         children: [
           CardLayoutWidget(
             child: Column(
               children: [
-                // const Align(
-                //   alignment: Alignment.centerRight,
-                //   child: Text("Mã hóa đơn: "),
-                // ),
-                // const SizedBox(
-                //   height: 16.0,
-                // ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: const [
@@ -67,56 +148,94 @@ class ShowBillConfirmScreen extends StatelessWidget {
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text("Thời gian: ",
-                        style: TextStyle(fontWeight: FontWeight.w600)),
-                    Text("07:12 AM - 11/11/2022")
-                  ],
-                ),
-                const SizedBox(
-                  height: 16.0,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text("Thành tiền: ",
+                    const Text("Thời gian: ",
                         style: TextStyle(fontWeight: FontWeight.w600)),
-                    Text("$sumMoeny VND", style: TextStyle(color: logoGreen))
+                    // ignore: unnecessary_string_interpolations
+                    Text("${DateFormat("yyyy-MM-dd").format(DateTime.now())}")
                   ],
                 ),
                 const SizedBox(
-                  height: 16.0,
+                  height: 10.0,
+                ),
+                divider(context: context),
+                const SizedBox(
+                  height: 10.0,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("Sản phẩm mua: ",
-                        style: TextStyle(fontWeight: FontWeight.w600)),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                  children: const [
+                    Expanded(
+                      flex: 7,
+                      child: Text(
+                        'Thuốc',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Expanded(
+                        flex: 5,
+                        child: Text(
+                          'Số lô/Số lượng',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                          textAlign: TextAlign.center,
+                        )),
+                    Expanded(
+                      flex: 4,
+                      child: Text(
+                        'Đơn giá',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textAlign: TextAlign.end,
+                      ),
+                    )
+                  ],
+                ),
+                const SizedBox(
+                  height: 10.0,
+                ),
+                for (var items in widget.productSelect.entries)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        for (var item in productSelect.entries)
-                          if (item.value > 0)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 10.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                      "KHông - SL: ${item.value}"),
-                                  const SizedBox(
-                                    height: 8.0,
-                                  ),
-                                  Text(
-                                    "200 VND",
-                                    style: TextStyle(color: logoGreen),
-                                  ),
-                                ],
-                              ),
-                            ),
+                        Expanded(
+                          flex: 7,
+                          child: Text('${items.key.tenThuoc}'),
+                        ),
+                        Expanded(
+                            flex: 4,
+                            child: Text(
+                              '${items.key.soLo}/${items.value}',
+                              textAlign: TextAlign.center,
+                            )),
+                        Expanded(
+                          flex: 4,
+                          child: Text(
+                            '${items.key.giaBan} VND',
+                            textAlign: TextAlign.end,
+                          ),
+                        )
                       ],
                     ),
+                  ),
+                divider(context: context),
+                const SizedBox(
+                  height: 10.0,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    const Text("Thành tiền: ",
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontStyle: FontStyle.italic)),
+                    const SizedBox(
+                      width: 8.0,
+                    ),
+                    Text("$sumMoeny VND",
+                        style: TextStyle(
+                            color: logoGreen, fontStyle: FontStyle.italic))
                   ],
                 ),
               ],
@@ -126,9 +245,16 @@ class ShowBillConfirmScreen extends StatelessWidget {
             child: SizedBox(),
           ),
           InkWell(
-            onTap: () {
-              toast("Thành công");
-              globalAppContent.currentState?.selectSellTab();
+            onTap: () async {
+              await addListProductSell();
+              await callApiChiTietDonXuat(listProductSell);
+              Future.delayed(const Duration(seconds: 2), () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SellScreen()),
+                  (Route<dynamic> route) => false,
+                );
+              });
             },
             child: Container(
               alignment: Alignment.center,

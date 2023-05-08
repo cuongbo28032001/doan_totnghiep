@@ -1,31 +1,56 @@
 import 'package:fltn_app/common/validate_form.dart';
-import 'package:fltn_app/common/widgets/card_layout.dart';
 import 'package:fltn_app/common/widgets/input_layout.dart';
-import 'package:fltn_app/stores/model/employeeModel.dart';
-import 'package:fltn_app/stores/model/productModel.dart';
+import 'package:fltn_app/views/pages/setting/employee_manager/employee_manager.dart';
 import 'package:flutter/material.dart';
-
+import '../../../../api.dart';
+import '../../../../common/date_form_field.dart';
 import '../../../../common/widgets/showToast.dart';
 import '../../../../consts/colorsTheme.dart';
+// ignore: depend_on_referenced_packages
+import 'package:intl/intl.dart';
 
 class AddEmployeeScreen extends StatefulWidget {
-  AddEmployeeScreen({super.key});
+  const AddEmployeeScreen({super.key});
 
   @override
   State<AddEmployeeScreen> createState() => _AddEmployeeScreenState();
 }
 
 class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
-  int _gender = 1;
-
+  int _gender = 0;
+  String? error;
   late TextEditingController controllerPassWord;
   late TextEditingController controllerNumberPhone;
   late TextEditingController controllerUserName;
   late TextEditingController controllerName;
-  late TextEditingController controllerAge;
+  late TextEditingController controllerBirthDay;
   late TextEditingController controllerSex;
   late TextEditingController controllerIdNumber;
+  late TextEditingController controllerEmail;
   final formkey = GlobalKey<FormState>();
+
+  callApiEmployee(object) async {
+    try {
+      var response = await httpPost('/api/auth/signup', object, context);
+      if (response.containsKey("body")) {
+        var body = response["body"]["message"];
+
+        setState(() {
+          if (body.toString().compareTo("User registered successfully!") == 0) {
+            error = 'Thêm nhân viên thành công';
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const EmployeeScreen()));
+          } else {
+            error = 'Lỗi';
+          }
+        });
+      }
+    } catch (e) {
+      return e;
+    }
+  }
 
   @override
   void initState() {
@@ -35,9 +60,10 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     controllerPassWord = TextEditingController(text: '');
     controllerUserName = TextEditingController(text: '');
     controllerName = TextEditingController(text: '');
-    controllerAge = TextEditingController(text: '');
+    controllerBirthDay = TextEditingController(text: '');
     controllerSex = TextEditingController(text: '');
     controllerIdNumber = TextEditingController(text: '');
+    controllerEmail = TextEditingController(text: '');
   }
 
   @override
@@ -46,11 +72,12 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     super.dispose();
     controllerNumberPhone.dispose();
     controllerPassWord.dispose();
-    controllerAge.dispose();
+    controllerBirthDay.dispose();
     controllerIdNumber.dispose();
     controllerSex.dispose();
     controllerUserName.dispose();
     controllerName.dispose();
+    controllerEmail.dispose();
   }
 
   _onInputNewPass(value) {
@@ -97,14 +124,22 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     }
   }
 
-  _onInputNewDate(value) {
+  _onInputDate(value) {
     if (value != null) {
       setState(() {
-        controllerAge.value = controllerAge.value.copyWith(
+        controllerBirthDay.value = controllerBirthDay.value.copyWith(
             text: value,
             selection:
                 TextSelection.collapsed(offset: value.toString().length));
       });
+    }
+  }
+
+  _onInPutEmail(value) {
+    if (value != null) {
+      controllerEmail.value = controllerEmail.value.copyWith(
+          text: value,
+          selection: TextSelection.collapsed(offset: value.toString().length));
     }
   }
 
@@ -142,6 +177,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         children: [
           InputFormWidget(
             controller: controllerName,
+            note: true,
             label: 'Tên nhân viên',
             valid: ValidateForm().validateText,
             callback: (value) {
@@ -180,6 +216,18 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
             height: 10.0,
           ),
           InputFormWidget(
+            note: true,
+            controller: controllerEmail,
+            label: 'Email',
+            callback: (value) {
+              _onInPutEmail(value);
+            },
+            valid: ValidateForm().validatePass,
+          ),
+          const SizedBox(
+            height: 10.0,
+          ),
+          InputFormWidget(
             controller: controllerNumberPhone,
             note: true,
             label: 'Số điện thoại',
@@ -191,13 +239,14 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           const SizedBox(
             height: 10.0,
           ),
-          InputFormWidget(
-            controller: controllerAge,
-            label: 'Tuổi',
-            callback: (value) {
-              _onInputNewDate(value);
-            },
-          ),
+          renderDate(
+              controller: controllerBirthDay,
+              label: "Ngày sinh",
+              onChanged: (value) {
+                DateTime dateTime = DateTime.parse(value);
+                String date = DateFormat("yyyy-MM-dd").format(dateTime);
+                _onInputDate(date);
+              }),
           const SizedBox(
             height: 10.0,
           ),
@@ -213,17 +262,20 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           ),
           InkWell(
             onTap: () {
-              EmployeeModel newEmployee = EmployeeModel(
-                  userName: controllerUserName.text,
-                  passWord: controllerPassWord.text,
-                  name: controllerName.text,
-                  numberPhone: controllerNumberPhone.text,
-                  age: int.parse(controllerAge.text),
-                  sex: _gender,
-                  idNumber: controllerIdNumber.text);
+              // ignore: unused_local_variable
+              var newEmployee = {
+                'username': controllerUserName.text,
+                'password': controllerPassWord.text,
+                'name': controllerName.text,
+                'phone': controllerNumberPhone.text,
+                'email': controllerEmail.text,
+                'sex': _gender,
+                'cccd': controllerIdNumber.text,
+                'birthDay': controllerBirthDay.text
+              };
+              print(newEmployee);
               if (formkey.currentState!.validate()) {
-                toast("Thành công");
-                print(newEmployee);
+                callApiEmployee(newEmployee);
               }
             },
             child: Container(
@@ -266,11 +318,11 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
               width: 20,
             ),
             Radio(
-              value: 1,
+              value: 0,
               groupValue: _gender,
               onChanged: (value) {
                 setState(() {
-                  _gender = 1;
+                  _gender = 0;
                 });
               },
             ),
@@ -281,11 +333,11 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
               width: 10,
             ),
             Radio(
-              value: 0,
+              value: 1,
               groupValue: _gender,
               onChanged: (value) {
                 setState(() {
-                  _gender = 0;
+                  _gender = 1;
                 });
               },
             ),

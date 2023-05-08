@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class ShowBottomSheet extends StatefulWidget {
   final String title;
+  // ignore: prefer_typing_uninitialized_variables
   final pageScreen;
   const ShowBottomSheet({super.key, required this.title, this.pageScreen});
 

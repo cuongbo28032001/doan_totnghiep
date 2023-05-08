@@ -1,16 +1,19 @@
+// ignore: unused_import
 import 'dart:convert';
-
+import 'dart:math';
 import 'package:fltn_app/api.dart';
+import 'package:fltn_app/url.dart';
 import 'package:fltn_app/views/pages/infomation_drugs.dart';
 import 'package:fltn_app/views/pages/sell/create_bill.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../../../common/widgets/divider.dart';
 import '../../../common/widgets/loading.dart';
 import '../../../common/widgets/search.dart';
 import '../../../consts/colorsTheme.dart';
 import 'dart:developer' as dev;
-
-import '../../../stores/model/productModel.dart';
+import '../../../model/lo_thuoc.dart';
+import '../../../model/productModel.dart';
 
 class SellScreen extends StatefulWidget {
   const SellScreen({super.key});
@@ -32,20 +35,14 @@ class _SellScreenState extends State<SellScreen> {
 
   bool loading = false;
   List<dynamic> listProduct = [];
+  Map<String, dynamic> searchProduc = {};
   callApiProduct() async {
     // var idTopicHome = Provider.of<HomeModel>(context, listen: false);
     // if (idTopicHome.check == true) {
     //   idTopic = idTopicHome.valueid;
-    var search = {
-      "pageNumber": 1,
-      "pageSize": 5,
-      "customize": {
-        // "tenThuoc":"Thuốc dạ dày chữ Y"
-      }
-    };
+    var search = {"pageNumber": 1, "pageSize": 100, "customize": searchProduc};
     try {
       var response = await httpPost('/api/thuoc/search', search, context);
-
       if (response.containsKey("body")) {
         var body = response["body"]["result"]["content"];
         setState(() {
@@ -60,14 +57,12 @@ class _SellScreenState extends State<SellScreen> {
     } catch (e) {
       return listProduct;
     }
-
     return listProduct;
   }
 
   @override
   void initState() {
     callApiProduct();
-
     super.initState();
   }
 
@@ -92,7 +87,9 @@ class _SellScreenState extends State<SellScreen> {
         const SizedBox(
           height: 10,
         ),
-        (loading == true) ? renderContentSell(context) : loadingCallAPi(),
+        (loading == true)
+            ? renderContentSell(context)
+            : Expanded(child: loadingCallAPi()),
       ],
     );
   }
@@ -104,8 +101,12 @@ class _SellScreenState extends State<SellScreen> {
           context: context,
           lable: 'Nhập tên, mã, serial/IMEI, lô, hsd',
           addIcon: Icons.add,
-          addItem: const CreateBillSellScreen(),
-          filterIcon: Icons.filter_alt_rounded,
+          addItem: CreateBillSellScreen(
+            listProducts: listProduct,
+          ),
+          callBack: (query) {
+            print(query);
+          },
         ));
   }
 
@@ -113,13 +114,38 @@ class _SellScreenState extends State<SellScreen> {
     return Expanded(
       child: SingleChildScrollView(
         child: Column(
-          children: [for (ProductModel item in listProduct) renderProduct(context, item)],
+          children: [
+            for (ProductModel item in listProduct)
+              Container(
+                color: Colors.white,
+                child: Column(
+                  children: [
+                    renderProduct(context, item),
+                    (listProduct.length - 1 != listProduct.indexOf(item))
+                        ? divider(context: context)
+                        : Container(
+                            height: 5.0,
+                            color: Colors.white,
+                          )
+                  ],
+                ),
+              )
+          ],
         ),
       ),
     );
   }
 
   renderProduct(context, ProductModel productModel) {
+    DefaultCacheManager().emptyCache();
+    int sum = 0;
+    if (productModel.loThuoc!.isEmpty) {
+      sum = 0;
+    } else {
+      for (LoThuoc items in productModel.loThuoc!) {
+        sum += items.soLuong!;
+      }
+    }
     return InkWell(
       onTap: () {
         dev.log("Select product $productModel");
@@ -139,11 +165,20 @@ class _SellScreenState extends State<SellScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(children: [
-              Image.asset('assets/images/LogoApp.png', height: 50, filterQuality: FilterQuality.high),
-              // Image(
-              //   image: AssetImage(productModel.url),
-              //   height: 50,
-              // ),
+              productModel.image != null
+                  ? Image.network(
+                      '$baseUrl/api/thuoc/image/${productModel.id}?timestamp=${Random().nextInt(10000)}',
+                      height: 50,
+                      width: 50,
+                      fit: BoxFit.fitWidth,
+                      key: UniqueKey(),
+                    )
+                  : Image.asset(
+                      "assets/images/image_local.png",
+                      height: 50,
+                      width: 50,
+                      fit: BoxFit.contain,
+                    ),
               Container(
                 height: 50,
                 color: Colors.red,
@@ -158,7 +193,8 @@ class _SellScreenState extends State<SellScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(productModel.tenThuoc ?? '', style: const TextStyle(fontSize: 15)),
+                          Text(productModel.tenThuoc ?? '',
+                              style: const TextStyle(fontSize: 15)),
                           Text(
                             productModel.maThuoc ?? '',
                             style: TextStyle(color: logoGreen, fontSize: 15),
@@ -168,30 +204,42 @@ class _SellScreenState extends State<SellScreen> {
                       const Expanded(
                         child: SizedBox(),
                       ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            "Chưa làm",
-                            style: TextStyle(color: logoGreen, fontSize: 15),
-                          ),
-                          Text(
-                            "Hàm lượng",
-                            style: const TextStyle(color: Colors.black54, fontSize: 14),
-                          ),
-                          Text(
-                            "SL kho: ${listProduct.length}",
-                            style: const TextStyle(fontSize: 15),
-                          ),
-                        ],
-                      ),
+                      (productModel.loThuoc!.isNotEmpty)
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "SL kho: $sum",
+                                  style: const TextStyle(fontSize: 15),
+                                ),
+                                Text(
+                                  "Đơn vị tính: ${productModel.donViTinh}",
+                                  style: const TextStyle(
+                                      color: Colors.black54, fontSize: 14),
+                                ),
+                              ],
+                            )
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "SL kho: $sum",
+                                  style: const TextStyle(fontSize: 15),
+                                ),
+                                Text(
+                                  "ĐV tính: ${productModel.donViTinh}",
+                                  style: const TextStyle(
+                                      color: Colors.black54, fontSize: 14),
+                                ),
+                              ],
+                            ),
                     ],
                   ),
                 ),
               )
             ]),
-            divider(context: context)
           ],
         ),
       ),

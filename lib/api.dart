@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:fltn_app/model/securityModel.dart';
 import 'package:fltn_app/url.dart';
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:developer' as dev;
+// ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
 // ignore: avoid_web_libraries_in_flutter
 
@@ -15,11 +16,15 @@ httpGet(url, context) async {
     headers["Authorization"] = "Bearer ${securityModel.authorization!}";
   }
   var response = await http.get(Uri.parse('$baseUrl$url'), headers: headers);
-  if (response.statusCode == 200 && response.headers["content-type"] == 'application/json') {
+  if (response.statusCode == 200 &&
+      response.headers["content-type"] == 'application/json') {
     try {
-      return {"headers": response.headers, "body": json.decode(utf8.decode(response.bodyBytes))};
+      return {
+        "headers": response.headers,
+        "body": json.decode(utf8.decode(response.bodyBytes))
+      };
     } on FormatException catch (e) {
-      print(e);
+      dev.log(e.toString());
     }
   } else if (response.statusCode == 403) {
     // showToast(
@@ -29,8 +34,12 @@ httpGet(url, context) async {
     //   icon: Icon(Icons.warning),
     // );
     return false;
-  } else
-    return {"headers": response.headers, "body": utf8.decode(response.bodyBytes)};
+  } else {
+    return {
+      "headers": response.headers,
+      "body": utf8.decode(response.bodyBytes)
+    };
+  }
 }
 
 // void downloadFile(String fileName) {
@@ -47,13 +56,18 @@ httpPost(url, requestBody, context) async {
     headers["Authorization"] = "Bearer ${securityModel.authorization!}";
   }
   var finalRequestBody = json.encode(requestBody);
-  var response = await http.post(Uri.parse("$baseUrl$url".toString()), headers: headers, body: finalRequestBody);
+  var response = await http.post(Uri.parse("$baseUrl$url".toString()),
+      headers: headers, body: finalRequestBody);
 
-  if (response.statusCode == 200 && response.headers["content-type"] == 'application/json') {
+  if (response.statusCode == 200 &&
+      response.headers["content-type"] == 'application/json') {
     // print("thông tin cần thiết");
     // print(json.decode(utf8.decode(response.bodyBytes)));
     try {
-      return {"headers": response.headers, "body": json.decode(utf8.decode(response.bodyBytes))};
+      return {
+        "headers": response.headers,
+        "body": json.decode(utf8.decode(response.bodyBytes))
+      };
       // ignore: unused_catch_clause
     } on FormatException catch (e) {
       //bypass
@@ -61,7 +75,10 @@ httpPost(url, requestBody, context) async {
   } else if (response.statusCode == 403) {
     return false;
   } else {
-    return {"headers": response.headers, "body": utf8.decode(response.bodyBytes)};
+    return {
+      "headers": response.headers,
+      "body": utf8.decode(response.bodyBytes)
+    };
   }
 }
 
@@ -73,9 +90,13 @@ httpDelete(url, context) async {
     headers["Authorization"] = "Bearer ${securityModel.authorization!}";
   }
   var response = await http.delete(Uri.parse('$baseUrl$url'), headers: headers);
-  if (response.statusCode == 200 && response.headers["content-type"] == 'application/json') {
+  if (response.statusCode == 200 &&
+      response.headers["content-type"] == 'application/json') {
     try {
-      return {"headers": response.headers, "body": json.decode(utf8.decode(response.bodyBytes))};
+      return {
+        "headers": response.headers,
+        "body": json.decode(utf8.decode(response.bodyBytes))
+      };
       // ignore: unused_catch_clause
     } on FormatException catch (e) {
       //bypass
@@ -88,8 +109,12 @@ httpDelete(url, context) async {
     //   icon: Icon(Icons.warning),
     // );
     return false;
-  } else
-    return {"headers": response.headers, "body": utf8.decode(response.bodyBytes)};
+  } else {
+    return {
+      "headers": response.headers,
+      "body": utf8.decode(response.bodyBytes)
+    };
+  }
 }
 
 //update bản ghi
@@ -100,12 +125,17 @@ httpPut(url, requestBody, context) async {
     headers["Authorization"] = "Bearer ${securityModel.authorization!}";
   }
   var finalRequestBody = json.encode(requestBody);
-  var response = await http.put(Uri.parse('$baseUrl$url'), headers: headers, body: finalRequestBody);
-  if (response.statusCode == 200 && response.headers["content-type"] == 'application/json') {
+  var response = await http.put(Uri.parse('$baseUrl$url'),
+      headers: headers, body: finalRequestBody);
+  if (response.statusCode == 200 &&
+      response.headers["content-type"] == 'application/json') {
     try {
-      return {"headers": response.headers, "body": json.decode(utf8.decode(response.bodyBytes))};
+      return {
+        "headers": response.headers,
+        "body": json.decode(utf8.decode(response.bodyBytes))
+      };
     } on FormatException catch (e) {
-      print(e);
+      dev.log(e.toString());
       //bypass
     }
   } else if (response.statusCode == 403) {
@@ -116,6 +146,10 @@ httpPut(url, requestBody, context) async {
     //   icon: Icon(Icons.warning),
     // );
     return false;
-  } else
-    return {"headers": response.headers, "body": utf8.decode(response.bodyBytes)};
+  } else {
+    return {
+      "headers": response.headers,
+      "body": utf8.decode(response.bodyBytes)
+    };
+  }
 }
